@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quadrillian Demo Chat</title>
+</head>
+<body>
+  <h1>Quadrillian Chat Demo</h1>
+  <p>Click the button to open authenticated chat.</p>
+
+  <button id="chat-button">Start Chat</button>
+
+  <script>
+    // Configuration loaded from backend
+    let chatConfig = null;
+    let sdkLoaded = false;
+
+    // Load configuration from backend on page load
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/chat/config');
+        if (response.ok) {
+          chatConfig = await response.json();
+          console.log('Chat config loaded:', chatConfig);
+          
+          // Load SDK from the configured base URL
+          if (chatConfig.base_url && !sdkLoaded) {
+            const sdkScript = document.createElement('script');
+            sdkScript.src = `${chatConfig.base_url}/js/chat/sdk.js`;
+            sdkScript.async = true;
+            sdkScript.onload = () => {
+              sdkLoaded = true;
+              console.log('Quadrillian SDK loaded from:', chatConfig.base_url);
+            };
+            sdkScript.onerror = () => {
+              console.error('Failed to load SDK from:', chatConfig.base_url);
+            };
+            document.head.appendChild(sdkScript);
+          }
+        } else {
+          console.error('Failed to load chat config');
+        }
+      } catch (err) {
+        console.error('Error loading config:', err);
+      }
+    }
+
+    async function openAuthenticatedChat() {
+      try {
+        // Wait for config if not loaded yet
+        if (!chatConfig) {
+          await loadConfig();
+        }
+
+        // 1) Ask our backend for a fresh JWT
+        const response = await fetch('/api/chat/auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          console.error('Failed to get JWT from /api/chat/auth');
+          return;
+        }
+
+        const data = await response.json();
+        const jwtToken = data.jwt;
+
+        if (!jwtToken) {
+          console.error('No jwt field in /api/chat/auth response');
+          return;
+        }
+
+        // Wait for SDK to be ready
+        let attempts = 0;
+        while (typeof Quadrillian === 'undefined' && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+
+        if (typeof Quadrillian === 'undefined') {
+          console.error('Quadrillian SDK not loaded yet. Make sure local Quadrillian is running on', chatConfig.base_url);
+          return;
+        }
+
+        // Configure SDK to use local base URL if available
+        if (chatConfig.base_url && Quadrillian.setBaseUrl) {
+          Quadrillian.setBaseUrl(chatConfig.base_url);
+        }
+
+        // Create chat window with configuration from backend
+        Quadrillian.createChatWindow({
+          workspace_id: String(chatConfig.workspace_id),
+          topic_external_key: "support-general",
+          jwt_token: jwtToken,
+          ai_user_id: chatConfig.ai_user_id,
+          position: "bottom-right",
+          width: 400,
+          height: 600,
+          base_url: chatConfig.base_url // Pass base_url if SDK supports it
+        });
+
+      } catch (err) {
+        console.error('Error opening chat:', err);
+      }
+    }
+
+    // Load config and attach listener when page loads
+    loadConfig();
+    document.getElementById('chat-button').addEventListener('click', openAuthenticatedChat);
+  </script>
+</body>
+</html>
