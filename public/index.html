@@ -2,13 +2,693 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quadrillian Demo Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PowerQ - Real-Time Communication Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --secondary: #3b82f6;
+      --accent: #60a5fa;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --bg-light: #f8fafc;
+      --bg-white: #ffffff;
+      --border: #e2e8f0;
+      --footer-light: #e0f2fe;
+      --footer-medium: #bae6fd;
+      --footer-dark: #7dd3fc;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 0.5rem;
+      gap: 5px;
+      background: none;
+      border: none;
+      z-index: 1001;
+    }
+
+    .menu-toggle span {
+      width: 25px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    /* Mobile Menu */
+    .nav-links.mobile-active {
+      display: flex;
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid var(--border);
+      gap: 0;
+    }
+
+    .nav-links.mobile-active li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-links.mobile-active li:last-child {
+      border-bottom: none;
+    }
+
+    .nav-links.mobile-active a {
+      font-size: 1.1rem;
+      width: 100%;
+      display: block;
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      position: relative;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.3;
+    }
+
+    .hero-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      color: white;
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .hero p {
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 2rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 6rem 2rem;
+      background: var(--bg-light);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s;
+      border: 1px solid var(--border);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.9;
+    }
+
+    .feature-card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* Chat Widget Showcase */
+    .chat-showcase {
+      padding: 6rem 2rem;
+      background: white;
+    }
+
+    .showcase-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .showcase-text h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .showcase-text p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      opacity: 0.95;
+    }
+
+    .showcase-visual {
+      position: relative;
+      background: var(--bg-light);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+
+
+    /* Footer */
+    footer {
+      background: linear-gradient(135deg, var(--footer-light) 0%, var(--footer-medium) 50%, var(--footer-dark) 100%);
+      color: var(--text-primary);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-content p {
+      color: var(--text-primary);
+    }
+
+    .powered-by {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .powered-by a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .powered-by a:hover {
+      text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .showcase-content {
+        gap: 2rem;
+      }
+      
+      .features-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 0 1.5rem;
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 100px;
+        min-height: 90vh;
+      }
+
+      .hero-content {
+        padding: 0 1.5rem;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .btn {
+        padding: 0.875rem 1.75rem;
+        font-size: 1rem;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .features {
+        padding: 4rem 1.5rem;
+      }
+
+      .section-header {
+        margin-bottom: 3rem;
+      }
+
+      .section-header h2 {
+        font-size: 2rem;
+      }
+
+      .section-header p {
+        font-size: 1.1rem;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .feature-card {
+        padding: 2rem;
+      }
+
+      .chat-showcase {
+        padding: 4rem 1.5rem;
+      }
+
+      .showcase-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .showcase-visual {
+        padding: 1.5rem;
+      }
+
+      footer {
+        padding: 2.5rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-container {
+        padding: 0 1rem;
+      }
+
+      .logo {
+        font-size: 1.25rem;
+      }
+
+      .hero {
+        padding-top: 80px;
+        min-height: 85vh;
+      }
+
+      .hero-content {
+        padding: 0 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+      }
+
+      .features {
+        padding: 3rem 1rem;
+      }
+
+      .section-header h2 {
+        font-size: 1.75rem;
+      }
+
+      .section-header p {
+        font-size: 1rem;
+      }
+
+      .feature-card {
+        padding: 1.5rem;
+      }
+
+      .feature-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+      }
+
+      .feature-card h3 {
+        font-size: 1.25rem;
+      }
+
+      .chat-showcase {
+        padding: 3rem 1rem;
+      }
+
+      .showcase-text h2 {
+        font-size: 1.75rem;
+      }
+
+      .showcase-text p {
+        font-size: 1rem;
+      }
+
+      footer {
+        padding: 2rem 1rem;
+      }
+
+      .footer-content p {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Quadrillian Chat Demo</h1>
-  <p>Click the button to open authenticated chat.</p>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <div class="logo">PowerQ</div>
+      <button class="menu-toggle" aria-label="Toggle menu" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#showcase">Chat</a></li>
+        <li><a href="/integration.html">Integration</a></li>
+      </ul>
+    </div>
+  </nav>
 
-  <button id="chat-button">Start Chat</button>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Real-Time Communication<br />Made Simple</h1>
+      <p>Experience seamless, secure messaging with advanced features powered by Quadrillian. Connect with your team and customers instantly.</p>
+      <div class="cta-buttons">
+        <a href="#showcase" class="btn btn-primary">Try Chat Now</a>
+        <a href="#features" class="btn btn-secondary">Learn More</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Powerful Features</h2>
+        <p>Everything you need for modern communication</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Real-Time Messaging</h3>
+          <p>Instant, secure messaging with end-to-end encryption. Chat with your team and customers in real-time without any delays.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Private</h3>
+          <p>Enterprise-grade security with JWT authentication. Your conversations are protected and isolated within your workspace.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📎</div>
+          <h3>File Sharing</h3>
+          <p>Share files, images, and documents seamlessly. Support for multiple file types with automatic virus scanning.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>AI Integration</h3>
+          <p>Powered by advanced AI to help automate responses, provide suggestions, and enhance your communication experience.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Lightning Fast</h3>
+          <p>Optimized for performance with minimal latency. Experience smooth, responsive chat even with high message volumes.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Customizable</h3>
+          <p>Easily integrate into your website with customizable appearance and behavior. Match your brand perfectly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Showcase Section -->
+  <section class="chat-showcase" id="showcase">
+    <div class="container">
+      <div class="showcase-content">
+        <div class="showcase-text">
+          <span class="badge">Powered by Quadrillian</span>
+          <h2>Experience Professional Chat</h2>
+          <p>Our chat widget is powered by Quadrillian, a cutting-edge communication platform trusted by businesses worldwide.</p>
+          <p>Use the Quadrillian chat button in the bottom-right corner to start a conversation. The widget features secure authentication, real-time messaging, and seamless integration.</p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="openAuthenticatedChat()">Open Chat Window</button>
+            <a href="/integration.html" class="btn btn-secondary" style="text-decoration: none;">View Integration Guide</a>
+          </div>
+        </div>
+        <div class="showcase-visual">
+          <div style="background: white; border-radius: 12px; padding: 2rem; text-align: center; min-height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">💬</div>
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Chat Widget</h3>
+            <p style="color: var(--text-secondary);">Use the Quadrillian chat widget to start chatting!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <p>&copy; 2024 PowerQ. All rights reserved.</p>
+      <p class="powered-by">
+        Powered by <a href="https://quadrillian.com" target="_blank" rel="noopener">Quadrillian</a> - Professional Chat Solutions
+      </p>
+    </div>
+  </footer>
 
   <script>
     // Configuration loaded from backend
@@ -34,6 +714,25 @@
             };
             sdkScript.onerror = () => {
               console.error('Failed to load SDK from:', chatConfig.base_url);
+              // Fallback to production SDK
+              const fallbackScript = document.createElement('script');
+              fallbackScript.src = 'https://eng.quadrillian.com/js/chat/sdk.js';
+              fallbackScript.async = true;
+              fallbackScript.onload = () => {
+                sdkLoaded = true;
+                console.log('Quadrillian SDK loaded from production');
+              };
+              document.head.appendChild(fallbackScript);
+            };
+            document.head.appendChild(sdkScript);
+          } else if (!chatConfig.base_url) {
+            // Use production SDK if no base_url configured
+            const sdkScript = document.createElement('script');
+            sdkScript.src = 'https://eng.quadrillian.com/js/chat/sdk.js';
+            sdkScript.async = true;
+            sdkScript.onload = () => {
+              sdkLoaded = true;
+              console.log('Quadrillian SDK loaded from production');
             };
             document.head.appendChild(sdkScript);
           }
@@ -63,6 +762,7 @@
 
         if (!response.ok) {
           console.error('Failed to get JWT from /api/chat/auth');
+          alert('Unable to authenticate. Please try again.');
           return;
         }
 
@@ -71,6 +771,7 @@
 
         if (!jwtToken) {
           console.error('No jwt field in /api/chat/auth response');
+          alert('Authentication failed. Please try again.');
           return;
         }
 
@@ -82,35 +783,78 @@
         }
 
         if (typeof Quadrillian === 'undefined') {
-          console.error('Quadrillian SDK not loaded yet. Make sure local Quadrillian is running on', chatConfig.base_url);
+          console.error('Quadrillian SDK not loaded yet.');
+          alert('Chat widget is loading. Please wait a moment and try again.');
           return;
         }
 
         // Configure SDK to use local base URL if available
-        if (chatConfig.base_url && Quadrillian.setBaseUrl) {
+        if (chatConfig && chatConfig.base_url && Quadrillian.setBaseUrl) {
           Quadrillian.setBaseUrl(chatConfig.base_url);
         }
 
         // Create chat window with configuration from backend
         Quadrillian.createChatWindow({
-          workspace_id: String(chatConfig.workspace_id),
+          workspace_id: String(chatConfig ? chatConfig.workspace_id : '456'),
           topic_external_key: "support-general",
           jwt_token: jwtToken,
-          ai_user_id: chatConfig.ai_user_id,
+          ai_user_id: chatConfig ? chatConfig.ai_user_id : undefined,
           position: "bottom-right",
           width: 400,
           height: 600,
-          base_url: chatConfig.base_url // Pass base_url if SDK supports it
+          base_url: chatConfig ? chatConfig.base_url : undefined
         });
 
       } catch (err) {
         console.error('Error opening chat:', err);
+        alert('Unable to open chat. Please check your connection and try again.');
       }
     }
 
-    // Load config and attach listener when page loads
+    // Mobile Menu Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (menuToggle && navLinks) {
+      menuToggle.addEventListener('click', function() {
+        menuToggle.classList.toggle('active');
+        navLinks.classList.toggle('mobile-active');
+      });
+
+      // Close menu when clicking on a link
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() {
+          menuToggle.classList.remove('active');
+          navLinks.classList.remove('mobile-active');
+        });
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', function(event) {
+        const isClickInsideNav = navLinks.contains(event.target) || menuToggle.contains(event.target);
+        if (!isClickInsideNav && navLinks.classList.contains('mobile-active')) {
+          menuToggle.classList.remove('active');
+          navLinks.classList.remove('mobile-active');
+        }
+      });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Load config when page loads
     loadConfig();
-    document.getElementById('chat-button').addEventListener('click', openAuthenticatedChat);
   </script>
 </body>
 </html>

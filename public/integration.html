@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integration Guide - PowerQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --secondary: #3b82f6;
+      --accent: #60a5fa;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --bg-light: #f8fafc;
+      --bg-white: #ffffff;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --footer-light: #e0f2fe;
+      --footer-medium: #bae6fd;
+      --footer-dark: #7dd3fc;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background: var(--bg-light);
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 0.5rem;
+      gap: 5px;
+      background: none;
+      border: none;
+      z-index: 1001;
+    }
+
+    .menu-toggle span {
+      width: 25px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+      transform: rotate(45deg) translate(8px, 8px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+
+    .nav-links.mobile-active {
+      display: flex;
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-top: 1px solid var(--border);
+      gap: 0;
+    }
+
+    .nav-links.mobile-active li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-links.mobile-active li:last-child {
+      border-bottom: none;
+    }
+
+    .nav-links.mobile-active a {
+      font-size: 1.1rem;
+      width: 100%;
+      display: block;
+    }
+
+    /* Main Content */
+    .docs-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 100px 2rem 4rem;
+    }
+
+    .docs-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      transition: color 0.3s;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    .docs-header h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .docs-header p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    /* Content Sections */
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .section h4 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.8;
+    }
+
+    .section ul, .section ol {
+      margin-left: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    .section li {
+      margin-bottom: 0.75rem;
+      line-height: 1.8;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .code-block pre {
+      color: var(--code-text);
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .code-block code {
+      color: var(--code-text);
+    }
+
+    .code-label {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Info Boxes */
+    .info-box {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .info-box strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .warning-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .warning-box strong {
+      color: #d97706;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Steps */
+    .step-list {
+      list-style: none;
+      margin-left: 0;
+      counter-reset: step-counter;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 3rem;
+      margin-bottom: 2rem;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    /* Footer */
+    footer {
+      background: linear-gradient(135deg, var(--footer-light) 0%, var(--footer-medium) 50%, var(--footer-dark) 100%);
+      color: var(--text-primary);
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-top: 4rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-content p {
+      color: var(--text-primary);
+    }
+
+    .powered-by {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .powered-by a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .powered-by a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 0 1.5rem;
+      }
+
+      .menu-toggle {
+        display: flex;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .docs-container {
+        padding: 100px 1.5rem 2rem;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .section h2 {
+        font-size: 1.75rem;
+      }
+
+      .section h3 {
+        font-size: 1.25rem;
+      }
+
+      .code-block {
+        padding: 1rem;
+        font-size: 0.85rem;
+      }
+
+      .step-list li {
+        padding-left: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">PowerQ</a>
+      <button class="menu-toggle" aria-label="Toggle menu" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#features">Features</a></li>
+        <li><a href="/#showcase">Chat</a></li>
+        <li><a href="/integration.html">Integration</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="docs-container">
+    <div class="docs-header">
+      <a href="/" class="back-link">← Back to Home</a>
+      <span class="badge">Powered by Quadrillian</span>
+      <h1>Quadrillian Integration Guide</h1>
+      <p>Learn how we integrated powerful, real-time chat functionality into this website with just a few lines of code. This guide walks you through our Node.js/Express implementation.</p>
+    </div>
+
+    <!-- Integration Overview -->
+    <div class="section">
+      <h2>Integration Overview</h2>
+      <p>Quadrillian integration involves two main concepts: understanding the user flow and implementing the setup.</p>
+      
+      <h3>How the Chat Flow Works</h3>
+      <p>Here's what happens when a visitor interacts with chat on our website:</p>
+      
+      <ol class="step-list">
+        <li>
+          <strong>Visitor Clicks Chat</strong>
+          <p>A visitor clicks the chat button or widget to start a conversation.</p>
+        </li>
+        <li>
+          <strong>Our Server Generates JWT</strong>
+          <p>Our server creates a JWT token containing the visitor's user information and workspace ID, signed with our workspace secret.</p>
+        </li>
+        <li>
+          <strong>Browser Authenticates with Quadrillian</strong>
+          <p>The visitor's browser receives the JWT and passes it to Quadrillian. Quadrillian verifies the signature and automatically provisions the user if they don't exist.</p>
+        </li>
+        <li>
+          <strong>Chat Access Granted</strong>
+          <p>The visitor can now access chat functionality within our workspace, with full workspace isolation and security.</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Step 1: Backend Setup -->
+    <div class="section">
+      <h2>Step 1: Set Up Backend JWT Generation</h2>
+      <p>First, we set up server-side endpoints to generate JWT tokens. User provisioning happens automatically when users authenticate.</p>
+      
+      <div class="info-box">
+        <strong>📚 Security Note:</strong>
+        The <code>/api/chat/auth</code> endpoint MUST be protected by your existing authentication middleware. Never accept user credentials from the request body - always get them from the authenticated session.
+      </div>
+
+      <h3>Install Required Packages</h3>
+      <div class="code-block">
+        <span class="code-label">Terminal</span>
+        <pre><code>npm install express jsonwebtoken dotenv cors</code></pre>
+      </div>
+
+      <h3>Server Configuration</h3>
+      <div class="code-block">
+        <span class="code-label">server.js</span>
+        <pre><code>require('dotenv').config();
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Quadrillian configuration from environment variables
+const QuadrillianConfig = {
+  workspace_id: Number(process.env.QUAD_WORKSPACE_ID),
+  workspace_secret: process.env.QUAD_WORKSPACE_SECRET,
+  base_url: process.env.QUAD_BASE_URL || 'https://eng.quadrillian.com'
+};
+
+// Endpoint to generate JWT for chat authentication
+app.post('/api/chat/auth', async (req, res) => {
+  try {
+    // Get user info from authenticated session
+    // In production, replace this with your auth middleware
+    const user = {
+      id: 'user_123',
+      email: 'user@example.com',
+      name: 'Demo User'
+    };
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+
+    // Generate JWT - user provisioning happens automatically
+    const token = jwt.sign({
+      workspace_id: QuadrillianConfig.workspace_id,
+      external_user_id: user.id,
+      email: user.email,
+      name: user.name,
+      iat: nowSeconds,
+      exp: nowSeconds + (60 * 60 * 24) // 24 hours
+    }, QuadrillianConfig.workspace_secret, { algorithm: 'HS256' });
+
+    res.json({ jwt: token });
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+// Endpoint to get workspace configuration
+app.get('/api/chat/config', (req, res) => {
+  res.json({
+    workspace_id: QuadrillianConfig.workspace_id,
+    base_url: QuadrillianConfig.base_url
+  });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});</code></pre>
+      </div>
+
+      <h3>Environment Variables</h3>
+      <p>Create a <code>.env</code> file with your Quadrillian credentials:</p>
+      <div class="code-block">
+        <span class="code-label">.env</span>
+        <pre><code>QUAD_WORKSPACE_ID=your_workspace_id
+QUAD_WORKSPACE_SECRET=your_workspace_secret
+QUAD_BASE_URL=https://eng.quadrillian.com
+PORT=3000</code></pre>
+      </div>
+    </div>
+
+    <!-- Step 2: Frontend Integration -->
+    <div class="section">
+      <h2>Step 2: Add Quadrillian to Your Website</h2>
+      <p>Add the Quadrillian widget to your website using simple JavaScript. The widget handles authentication automatically.</p>
+
+      <h3>Load the SDK</h3>
+      <div class="code-block">
+        <span class="code-label">HTML</span>
+        <pre><code>&lt;!-- Load SDK asynchronously --&gt;
+&lt;script async src="https://eng.quadrillian.com/js/chat/sdk.js"&gt;&lt;/script&gt;</code></pre>
+      </div>
+
+      <h3>Open Chat with Authentication</h3>
+      <p>For authenticated users, get a fresh JWT token from your backend and create the chat window:</p>
+      <div class="code-block">
+        <span class="code-label">JavaScript</span>
+        <pre><code>async function openAuthenticatedChat() {
+  // Get fresh JWT from your backend
+  const response = await fetch('/api/chat/auth', {
+    method: 'POST',
+    credentials: 'include'
+  });
+  
+  const { jwt } = await response.json();
+  
+  // Create chat window with JWT
+  Quadrillian.createChatWindow({
+    workspace_id: "456",
+    topic_external_key: "support-general",
+    jwt_token: jwt,
+    position: "bottom-right",
+    width: 400,
+    height: 600
+  });
+}</code></pre>
+      </div>
+
+      <h3>Complete Frontend Implementation</h3>
+      <p>Here's how we implemented it on this website:</p>
+      <div class="code-block">
+        <span class="code-label">JavaScript</span>
+        <pre><code>// Load configuration from backend
+async function loadConfig() {
+  const response = await fetch('/api/chat/config');
+  const chatConfig = await response.json();
+  
+  // Load SDK from configured base URL
+  const sdkScript = document.createElement('script');
+  sdkScript.src = `${chatConfig.base_url}/js/chat/sdk.js`;
+  sdkScript.async = true;
+  document.head.appendChild(sdkScript);
+}
+
+// Open chat with authentication
+async function openAuthenticatedChat() {
+  // Wait for SDK to load
+  while (typeof Quadrillian === 'undefined') {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  // Get JWT from backend
+  const response = await fetch('/api/chat/auth', {
+    method: 'POST',
+    credentials: 'include'
+  });
+  
+  const { jwt } = await response.json();
+  
+  // Create chat window
+  Quadrillian.createChatWindow({
+    workspace_id: String(chatConfig.workspace_id),
+    topic_external_key: "support-general",
+    jwt_token: jwt,
+    position: "bottom-right"
+  });
+}
+
+// Load config on page load
+loadConfig();</code></pre>
+      </div>
+    </div>
+
+    <!-- Complete Flow -->
+    <div class="section">
+      <h2>Complete Authentication Flow</h2>
+      <ol>
+        <li><strong>User clicks chat button:</strong> Triggers <code>openAuthenticatedChat()</code> function</li>
+        <li><strong>Frontend calls backend:</strong> <code>fetch('/api/chat/auth', {credentials: 'include'})</code></li>
+        <li><strong>Backend validates session:</strong> Uses existing auth middleware to verify user identity</li>
+        <li><strong>Backend generates JWT:</strong> Returns JWT token to frontend</li>
+        <li><strong>Frontend loads widget:</strong> With JWT token passed to Quadrillian</li>
+        <li><strong>Widget authenticates automatically:</strong> JWT is verified and user is provisioned</li>
+      </ol>
+      
+      <div class="info-box">
+        <strong>✅ That's it!</strong>
+        Your chat is now live with secure JWT-based authentication. Users will be automatically provisioned on Quadrillian when they first chat, and their sessions will be secure and isolated to your workspace.
+      </div>
+    </div>
+
+    <!-- Key Benefits -->
+    <div class="section">
+      <h2>Key Benefits</h2>
+      <ul>
+        <li><strong>Secure server-to-server communication:</strong> Credentials never exposed to browsers</li>
+        <li><strong>Workspace isolation:</strong> Full security and isolation within your workspace</li>
+        <li><strong>Simple JavaScript integration:</strong> Minimal code required</li>
+        <li><strong>Automatic user provisioning:</strong> Users created automatically on first chat</li>
+        <li><strong>Real-time messaging:</strong> Instant communication with advanced features</li>
+      </ul>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="section">
+      <h2>Next Steps</h2>
+      <p>Now that you have basic chat working, you can:</p>
+      <ul>
+        <li>Create topics programmatically using the API</li>
+        <li>Customize the chat appearance and behavior</li>
+        <li>Add file upload capabilities</li>
+        <li>Integrate with your existing user management system</li>
+        <li>Set up automated responses and AI integration</li>
+      </ul>
+    </div>
+
+    <!-- Resources -->
+    <div class="section">
+      <h2>Resources</h2>
+      <ul>
+        <li><a href="https://eng.quadrillian.com/" target="_blank" rel="noopener">Quadrillian Platform</a></li>
+        <li><a href="https://eng.quadrillian.com/docs" target="_blank" rel="noopener">Quadrillian Documentation</a></li>
+        <li><a href="https://github.com/AysunItai/powerq" target="_blank" rel="noopener">View Source Code</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <p>&copy; 2024 PowerQ. All rights reserved.</p>
+      <p class="powered-by">
+        Powered by <a href="https://eng.quadrillian.com" target="_blank" rel="noopener">Quadrillian</a> - Professional Chat Solutions
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile Menu Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    if (menuToggle && navLinks) {
+      menuToggle.addEventListener('click', function() {
+        menuToggle.classList.toggle('active');
+        navLinks.classList.toggle('mobile-active');
+      });
+
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() {
+          menuToggle.classList.remove('active');
+          navLinks.classList.remove('mobile-active');
+        });
+      });
+
+      document.addEventListener('click', function(event) {
+        const isClickInsideNav = navLinks.contains(event.target) || menuToggle.contains(event.target);
+        if (!isClickInsideNav && navLinks.classList.contains('mobile-active')) {
+          menuToggle.classList.remove('active');
+          navLinks.classList.remove('mobile-active');
+        }
+      });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#' && href.startsWith('#')) {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

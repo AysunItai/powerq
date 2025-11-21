@@ -8,8 +8,9 @@ const cors = require('cors');
 const app = express();
 
 // Enable CORS for all routes
+// In production, set FRONTEND_URL to your Render app URL
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || '*', // Allow all origins in production, restrict in production
   credentials: true
 }));
 
@@ -21,7 +22,7 @@ const QuadrillianConfig = {
     workspace_id: Number(process.env.QUAD_WORKSPACE_ID),
     workspace_secret: process.env.QUAD_WORKSPACE_SECRET,
     ai_user_id: Number(process.env.QUAD_AI_USER_ID) || undefined,
-    base_url: process.env.QUAD_BASE_URL || 'http://localhost:8080'
+    base_url: process.env.QUAD_BASE_URL || 'https://eng.quadrillian.com'
   };
   
 if (!QuadrillianConfig.workspace_id || !QuadrillianConfig.workspace_secret) {
