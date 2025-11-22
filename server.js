@@ -9,20 +9,39 @@ const bcrypt = require('bcryptjs');
 
 const app = express();
 
+// Trust proxy (required for Render and other hosting platforms with reverse proxies)
+// This ensures cookies work correctly behind a proxy
+app.set('trust proxy', 1);
+
 // Enable CORS with proper origin restrictions
 // SECURITY: Never use '*' in production - it allows any website to access your API
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
-  : ['http://localhost:3000']; // Default to localhost for development
+  : (process.env.NODE_ENV === 'production' 
+      ? [] // In production, require FRONTEND_URL to be set
+      : ['http://localhost:3000']); // Default to localhost for development
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
-    if (!origin) return callback(null, true);
+    // Same-origin requests (same protocol, domain, port) don't send Origin header
+    if (!origin) {
+      // In production, allow same-origin requests
+      if (process.env.NODE_ENV === 'production') {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    }
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else if (process.env.NODE_ENV !== 'production') {
+      // In development, allow all origins
       callback(null, true);
     } else {
+      // In production, log the rejected origin for debugging
+      console.warn(`CORS: Rejected origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -67,10 +86,12 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (HTTPS only)
     httpOnly: true, // Prevents JavaScript access (XSS protection)
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // CSRF protection
+    // Use 'lax' instead of 'strict' for better compatibility with Render/proxies
+    // 'lax' still provides CSRF protection but allows cookies on top-level navigation
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    // In production, also set domain if needed:
-    // domain: '.yourdomain.com'
+    // Don't set domain - let browser use default (current domain)
+    // Setting domain can cause issues with subdomains
   }
 }));
 
@@ -146,6 +167,9 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email,
       name: user.name
     };
+
+    // Log session creation for debugging (remove in production if needed)
+    console.log(`✅ Login successful for user: ${user.email} (Session ID: ${req.sessionID})`);
 
     res.json({ 
       success: true,
