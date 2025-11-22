@@ -220,9 +220,14 @@
       box-shadow: 0 10px 30px rgba(30, 64, 175, 0.2);
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .btn-secondary {
@@ -597,6 +602,11 @@
         <li><a href="#features">Features</a></li>
         <li><a href="#showcase">Chat</a></li>
         <li><a href="/integration.html">Integration</a></li>
+        <li id="authNavItem">
+          <a href="/login.html" id="loginLink" style="display: none;">Login</a>
+          <span id="userInfo" style="display: none; color: var(--text-secondary); font-weight: 500;"></span>
+          <a href="#" id="logoutLink" style="display: none; color: var(--error);">Logout</a>
+        </li>
       </ul>
     </div>
   </nav>
@@ -665,8 +675,11 @@
           <p>Our chat widget is powered by Quadrillian, a cutting-edge communication platform trusted by businesses worldwide.</p>
           <p>Use the Quadrillian chat button in the bottom-right corner to start a conversation. The widget features secure authentication, real-time messaging, and seamless integration.</p>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" onclick="openAuthenticatedChat()">Open Chat Window</button>
+            <button class="btn btn-primary" onclick="openAuthenticatedChat()" id="chatButton">Open Chat Window</button>
             <a href="/integration.html" class="btn btn-secondary" style="text-decoration: none;">View Integration Guide</a>
+          </div>
+          <div id="authPrompt" style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; display: none;">
+            <p style="color: #92400e; margin: 0;"><strong>🔒 Authentication Required:</strong> Please <a href="/login.html" style="color: var(--primary); font-weight: 600;">login</a> to access chat.</p>
           </div>
         </div>
         <div class="showcase-visual">
@@ -694,6 +707,85 @@
     // Configuration loaded from backend
     let chatConfig = null;
     let sdkLoaded = false;
+    let currentUser = null;
+
+    // Check authentication status
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          currentUser = data.user;
+          updateAuthUI(true);
+        } else {
+          currentUser = null;
+          updateAuthUI(false);
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        currentUser = null;
+        updateAuthUI(false);
+      }
+    }
+
+    // Update UI based on authentication status
+    function updateAuthUI(isAuthenticated) {
+      const loginLink = document.getElementById('loginLink');
+      const logoutLink = document.getElementById('logoutLink');
+      const userInfo = document.getElementById('userInfo');
+      const chatButton = document.getElementById('chatButton');
+      const authPrompt = document.getElementById('authPrompt');
+
+      if (isAuthenticated && currentUser) {
+        // User is logged in
+        loginLink.style.display = 'none';
+        logoutLink.style.display = 'inline';
+        userInfo.style.display = 'inline';
+        userInfo.textContent = `👤 ${currentUser.name}`;
+        chatButton.disabled = false;
+        authPrompt.style.display = 'none';
+      } else {
+        // User is not logged in
+        loginLink.style.display = 'inline';
+        logoutLink.style.display = 'none';
+        userInfo.style.display = 'none';
+        chatButton.disabled = true;
+        authPrompt.style.display = 'block';
+      }
+    }
+
+    // Logout handler
+    async function handleLogout() {
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          currentUser = null;
+          updateAuthUI(false);
+          // Optionally redirect to login page
+          // window.location.href = '/login.html';
+        }
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+    }
+
+    // Attach logout handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutLink = document.getElementById('logoutLink');
+      if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          handleLogout();
+        });
+      }
+    });
 
     // Load configuration from backend on page load
     async function loadConfig() {
@@ -746,6 +838,13 @@
 
     async function openAuthenticatedChat() {
       try {
+        // Check if user is authenticated
+        if (!currentUser) {
+          alert('Please login to access chat.');
+          window.location.href = '/login.html';
+          return;
+        }
+
         // Wait for config if not loaded yet
         if (!chatConfig) {
           await loadConfig();
@@ -761,6 +860,11 @@
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            alert('Session expired. Please login again.');
+            window.location.href = '/login.html';
+            return;
+          }
           console.error('Failed to get JWT from /api/chat/auth');
           alert('Unable to authenticate. Please try again.');
           return;
@@ -768,10 +872,17 @@
 
         const data = await response.json();
         const jwtToken = data.jwt;
+        const topicExternalKey = data.topic_external_key; // User-specific topic key from backend
 
         if (!jwtToken) {
           console.error('No jwt field in /api/chat/auth response');
           alert('Authentication failed. Please try again.');
+          return;
+        }
+
+        if (!topicExternalKey) {
+          console.error('No topic_external_key in /api/chat/auth response');
+          alert('Chat configuration error. Please try again.');
           return;
         }
 
@@ -793,10 +904,11 @@
           Quadrillian.setBaseUrl(chatConfig.base_url);
         }
 
-        // Create chat window with configuration from backend
+        // Create chat window with user-specific topic key
+        // Each user gets their own isolated chat conversation
         Quadrillian.createChatWindow({
           workspace_id: String(chatConfig ? chatConfig.workspace_id : '456'),
-          topic_external_key: "support-general",
+          topic_external_key: topicExternalKey, // User-specific topic from backend
           jwt_token: jwtToken,
           ai_user_id: chatConfig ? chatConfig.ai_user_id : undefined,
           position: "bottom-right",
@@ -804,6 +916,8 @@
           height: 600,
           base_url: chatConfig ? chatConfig.base_url : undefined
         });
+
+        console.log(`Chat opened for user: ${data.user?.name || 'Unknown'} (Topic: ${topicExternalKey})`);
 
       } catch (err) {
         console.error('Error opening chat:', err);
@@ -853,8 +967,9 @@
       });
     });
 
-    // Load config when page loads
+    // Load config and check auth when page loads
     loadConfig();
+    checkAuth();
   </script>
 </body>
 </html>
