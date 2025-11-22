@@ -899,29 +899,64 @@
           return;
         }
 
-        // Configure SDK to use local base URL if available
-        if (chatConfig && chatConfig.base_url && Quadrillian.setBaseUrl) {
-          Quadrillian.setBaseUrl(chatConfig.base_url);
+        // Configure SDK base URL before creating chat window
+        // This ensures all API calls go to the correct Quadrillian instance
+        const baseUrl = chatConfig ? chatConfig.base_url : 'https://eng.quadrillian.com';
+        
+        if (Quadrillian.setBaseUrl) {
+          Quadrillian.setBaseUrl(baseUrl);
+          console.log('Quadrillian base URL set to:', baseUrl);
         }
 
         // Create chat window with user-specific topic key
         // Each user gets their own isolated chat conversation
-        Quadrillian.createChatWindow({
+        const chatConfig_obj = {
           workspace_id: String(chatConfig ? chatConfig.workspace_id : '456'),
           topic_external_key: topicExternalKey, // User-specific topic from backend
           jwt_token: jwtToken,
           ai_user_id: chatConfig ? chatConfig.ai_user_id : undefined,
           position: "bottom-right",
           width: 400,
-          height: 600,
-          base_url: chatConfig ? chatConfig.base_url : undefined
+          height: 600
+        };
+
+        // Only include base_url if it's different from default
+        // Some SDK versions handle this differently
+        if (baseUrl && baseUrl !== 'https://eng.quadrillian.com') {
+          chatConfig_obj.base_url = baseUrl;
+        }
+
+        console.log('Creating chat window with config:', {
+          workspace_id: chatConfig_obj.workspace_id,
+          topic_external_key: chatConfig_obj.topic_external_key,
+          base_url: baseUrl,
+          has_jwt: !!chatConfig_obj.jwt_token
         });
 
-        console.log(`Chat opened for user: ${data.user?.name || 'Unknown'} (Topic: ${topicExternalKey})`);
+        Quadrillian.createChatWindow(chatConfig_obj);
+
+        console.log(`✅ Chat opened for user: ${data.user?.name || 'Unknown'} (Topic: ${topicExternalKey})`);
 
       } catch (err) {
-        console.error('Error opening chat:', err);
-        alert('Unable to open chat. Please check your connection and try again.');
+        console.error('❌ Error opening chat:', err);
+        console.error('Error details:', {
+          message: err.message,
+          stack: err.stack,
+          chatConfig: chatConfig,
+          currentUser: currentUser
+        });
+        
+        // More helpful error message
+        let errorMsg = 'Unable to open chat. ';
+        if (err.message && err.message.includes('CORS')) {
+          errorMsg += 'CORS error detected. Please check your Quadrillian configuration.';
+        } else if (err.message && err.message.includes('network')) {
+          errorMsg += 'Network error. Please check your internet connection.';
+        } else {
+          errorMsg += 'Please check the browser console for details.';
+        }
+        
+        alert(errorMsg);
       }
     }
 

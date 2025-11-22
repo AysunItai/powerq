@@ -88,7 +88,7 @@ app.use(session({
     httpOnly: true, // Prevents JavaScript access (XSS protection)
     // Use 'lax' instead of 'strict' for better compatibility with Render/proxies
     // 'lax' still provides CSRF protection but allows cookies on top-level navigation
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     // Don't set domain - let browser use default (current domain)
     // Setting domain can cause issues with subdomains
@@ -259,10 +259,13 @@ app.post('/api/chat/auth', requireAuth, (req, res) => {
 // SECURITY: This is a public endpoint but only returns non-sensitive config
 // Never expose workspace_secret or other sensitive credentials here
 app.get('/api/chat/config', (req, res) => {
+  // Ensure base_url defaults to production if not set
+  const baseUrl = QuadrillianConfig.base_url || 'https://eng.quadrillian.com';
+  
   res.json({
     workspace_id: QuadrillianConfig.workspace_id,
     ai_user_id: QuadrillianConfig.ai_user_id,
-    base_url: QuadrillianConfig.base_url
+    base_url: baseUrl
     // SECURITY: workspace_secret is NEVER exposed to frontend
   });
 });
