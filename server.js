@@ -13,59 +13,8 @@ const app = express();
 // This ensures cookies work correctly behind a proxy
 app.set('trust proxy', 1);
 
-// Enable CORS with proper origin restrictions
-// SECURITY: Never use '*' in production - it allows any website to access your API
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
-  : (process.env.NODE_ENV === 'production' 
-      ? [] // In production, require FRONTEND_URL to be set
-      : ['http://localhost:3000']); // Default to localhost for development
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
-    // Same-origin requests (same protocol, domain, port) don't send Origin header
-    if (!origin) {
-      // In production, allow same-origin requests
-      if (process.env.NODE_ENV === 'production') {
-        return callback(null, true);
-      }
-      return callback(null, true);
-    }
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else if (process.env.NODE_ENV !== 'production') {
-      // In development, allow all origins
-      callback(null, true);
-    } else {
-      // In production, log the rejected origin for debugging
-      console.warn(`CORS: Rejected origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
-// Security headers middleware
-app.use((req, res, next) => {
-  // Prevent clickjacking
-  res.setHeader('X-Frame-Options', 'DENY');
-  // Prevent MIME type sniffing
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  // Enable XSS protection
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  // Referrer policy
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Content Security Policy (adjust as needed for your app)
-  if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://eng.quadrillian.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;");
-  }
-  next();
-});
 
 // Parse JSON bodies
 app.use(express.json());
