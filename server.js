@@ -43,19 +43,33 @@ app.use(session({
     // Setting domain can cause issues with subdomains
   }
 }));
-
-// Config from .env
+// Config from .env - Support for multiple workspaces (A and B)
 const QuadrillianConfig = {
-    workspace_id: Number(process.env.QUAD_WORKSPACE_ID),
-    workspace_secret: process.env.QUAD_WORKSPACE_SECRET,
+    // Workspace A (Primary/Default)
+    workspace_id: Number(process.env.QUAD_WORKSPACE_ID_A || process.env.QUAD_WORKSPACE_ID),
+    workspace_secret: process.env.QUAD_WORKSPACE_SECRET_A || process.env.QUAD_WORKSPACE_SECRET,
+    // Workspace B (For QA Testing)
+    workspace_b_id: Number(process.env.QUAD_WORKSPACE_ID_B) || undefined,
+    workspace_b_secret: process.env.QUAD_WORKSPACE_SECRET_B || undefined,
+    // Common config
     ai_user_id: Number(process.env.QUAD_AI_USER_ID) || undefined,
     base_url: process.env.QUAD_BASE_URL || 'https://eng.quadrillian.com'
   };
 
 if (!QuadrillianConfig.workspace_id || !QuadrillianConfig.workspace_secret) {
-  console.error('❌ QUAD_WORKSPACE_ID or QUAD_WORKSPACE_SECRET missing in .env');
+  console.error('❌ QUAD_WORKSPACE_ID_A/QUAD_WORKSPACE_SECRET_A or QUAD_WORKSPACE_ID/QUAD_WORKSPACE_SECRET missing in .env');
   process.exit(1);
 }
+
+// Log workspace configuration
+console.log('✅ Workspace A configured:', QuadrillianConfig.workspace_id);
+if (QuadrillianConfig.workspace_b_id && QuadrillianConfig.workspace_b_secret) {
+  console.log('✅ Workspace B configured:', QuadrillianConfig.workspace_b_id);
+} else {
+  console.log('⚠️  Workspace B not configured (optional for QA testing)');
+}
+
+
 
 // In-memory user store (replace with database in production)
 // For demo purposes, we'll store users in memory
@@ -219,9 +233,76 @@ app.get('/api/chat/config', (req, res) => {
   });
 });
 
+app.get('/api/qa/workspaces', (req, res) => {
+  const workspaces = [
+    {
+      id: 'A',
+      name: 'Workspace A',
+      workspace_id: QuadrillianConfig.workspace_id,
+      ai_user_id: QuadrillianConfig.ai_user_id
+    }
+  ];
+  
+  if (QuadrillianConfig.workspace_b_id && QuadrillianConfig.workspace_b_secret) {
+    workspaces.push({
+      id: 'B',
+      name: 'Workspace B',
+      workspace_id: QuadrillianConfig.workspace_b_id,
+      ai_user_id: QuadrillianConfig.ai_user_id
+    });
+  }
+  
+  res.json({ workspaces });
+});
+
+// QA Testing: Generate JWT for specific workspace
+app.post('/api/qa/chat/auth', requireAuth, (req, res) => {
+  try {
+    const user = req.user;
+    const { workspace } = req.body;
+    
+    let workspace_id, workspace_secret, ai_user_id;
+    
+    if (workspace === 'B' && QuadrillianConfig.workspace_b_id && QuadrillianConfig.workspace_b_secret) {
+      workspace_id = QuadrillianConfig.workspace_b_id;
+      workspace_secret = QuadrillianConfig.workspace_b_secret;
+      ai_user_id = QuadrillianConfig.ai_user_id;
+    } else {
+      workspace_id = QuadrillianConfig.workspace_id;
+      workspace_secret = QuadrillianConfig.workspace_secret;
+      ai_user_id = QuadrillianConfig.ai_user_id;
+    }
+    
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const payload = {
+      workspace_id: workspace_id,
+      external_user_id: user.id,
+      email: user.email,
+      name: user.name,
+      iat: nowSeconds,
+      exp: nowSeconds + 60 * 60 * 24,
+    };
+    
+    const token = jwt.sign(payload, workspace_secret, { algorithm: 'HS256' });
+    const topic_external_key = `user-${user.id}`;
+    
+    res.json({ 
+      jwt: token,
+      topic_external_key: topic_external_key,
+      workspace_id: workspace_id,
+      workspace: workspace || 'A',
+      user: { id: user.id, email: user.email, name: user.name }
+    });
+  } catch (err) {
+    console.error('QA Auth error:', err);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
 // Start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+
+// QA Testing: Get available workspaces

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QA Testing Guide - PowerQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --secondary: #3b82f6;
+      --accent: #60a5fa;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --bg-light: #f8fafc;
+      --bg-white: #ffffff;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text-primary);
+      line-height: 1.6;
+      background: var(--bg-light);
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      padding: 1rem 0;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Main Content */
+    .docs-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 100px 2rem 4rem;
+    }
+
+    .docs-header {
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      transition: color 0.3s;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    .docs-header h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .docs-header p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    /* Content Sections */
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      line-height: 1.8;
+    }
+
+    .section ol, .section ul {
+      margin-left: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    .section li {
+      margin-bottom: 0.75rem;
+      line-height: 1.8;
+    }
+
+    /* Step List */
+    .step-list {
+      list-style: none;
+      margin-left: 0;
+      counter-reset: step-counter;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 3rem;
+      margin-bottom: 2rem;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 2rem;
+      height: 2rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    /* Info Boxes */
+    .info-box {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .info-box strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .warning-box {
+      background: #fff3cd;
+      border-left: 4px solid var(--warning);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .warning-box strong {
+      color: #d97706;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .success-box {
+      background: #d1fae5;
+      border-left: 4px solid var(--success);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .success-box strong {
+      color: #065f46;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-box {
+      background: #fee2e2;
+      border-left: 4px solid var(--error);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .error-box strong {
+      color: #991b1b;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 1rem;
+      transition: all 0.3s;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(30, 64, 175, 0.3);
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9em;
+      color: var(--primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 0 1.5rem;
+      }
+
+      .docs-container {
+        padding: 100px 1.5rem 2rem;
+      }
+
+      .section {
+        padding: 1.5rem;
+      }
+
+      .section h2 {
+        font-size: 1.75rem;
+      }
+
+      .step-list li {
+        padding-left: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">PowerQ</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#features">Features</a></li>
+        <li><a href="/#showcase">Chat</a></li>
+        <li><a href="/integration.html">Integration</a></li>
+        <li><a href="/qa-test.html">🧪 QA Test</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="docs-container">
+    <div class="docs-header">
+      <a href="/" class="back-link">← Back to Home</a>
+      <span class="badge">QA Testing Guide</span>
+      <h1>🧪 QA Testing Guide</h1>
+      <p>Simple step-by-step instructions for testing workspace isolation feature</p>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="section">
+      <h2>Step 1: Open the Testing Page</h2>
+      <p>Go to the QA testing page:</p>
+      <div class="info-box">
+        <strong>📍 Testing Page URL:</strong>
+        <code>http://localhost:3000/qa-test.html</code>
+      </div>
+      <p>Or click the <strong>"🧪 QA Test"</strong> link in the navigation menu.</p>
+      <a href="/qa-test.html" class="cta-button">Go to QA Test Page →</a>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="section">
+      <h2>Step 2: Login (If Needed)</h2>
+      
+      <h3>If you see a BIG YELLOW BOX:</h3>
+      <div class="warning-box">
+        <strong>⚠️ YOU NEED TO LOGIN FIRST!</strong>
+        <ol>
+          <li>Click the big blue button that says <strong>"👉 CLICK HERE TO LOGIN 👈"</strong></li>
+          <li>Use these credentials:
+            <ul>
+              <li><strong>Email:</strong> <code>john@example.com</code></li>
+              <li><strong>Password:</strong> <code>password123</code></li>
+            </ul>
+          </li>
+          <li>After logging in, you'll be redirected back to the QA test page</li>
+        </ol>
+      </div>
+
+      <h3>If you see TWO BIG BOXES (Workspace A and Workspace B):</h3>
+      <div class="success-box">
+        <strong>✅ YOU'RE READY TO TEST!</strong>
+        <p>You're already logged in. Proceed to Step 3.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="section">
+      <h2>Step 3: Test Workspace A</h2>
+      <ol class="step-list">
+        <li>
+          <strong>Click on the "Workspace A" box</strong>
+          <p>The box will turn purple/blue when selected</p>
+        </li>
+        <li>
+          <strong>Click the "🚀 Open Chat with Selected Workspace" button</strong>
+          <p>This will open the chat widget</p>
+        </li>
+        <li>
+          <strong>A chat window will open</strong>
+          <p>The chat window appears in the bottom-right corner of your screen</p>
+        </li>
+        <li>
+          <strong>Look at the topics/conversations list</strong>
+          <p>You should see a list of topics or conversations in the chat window</p>
+          <div class="info-box" style="margin-top: 0.5rem;">
+            <strong>📝 IMPORTANT:</strong> Write down 2-3 topic names you see (e.g., "Support Ticket #123", "General Chat", "Question about X"). You'll need these for Step 5!
+          </div>
+        </li>
+        <li>
+          <strong>If you don't see any topics:</strong>
+          <p>Send a test message in the chat - this will create a topic. Then write down the topic name.</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="section">
+      <h2>Step 4: Test Workspace B</h2>
+      <ol class="step-list">
+        <li>
+          <strong>Close the Workspace A chat window</strong>
+          <p>Click the X button to close the current chat</p>
+        </li>
+        <li>
+          <strong>Click on the "Workspace B" box</strong>
+          <p>The box will turn purple/blue when selected</p>
+        </li>
+        <li>
+          <strong>Click "🚀 Open Chat with Selected Workspace" again</strong>
+          <p>A new chat window will open for Workspace B</p>
+        </li>
+        <li>
+          <strong>Look at the topics list in Workspace B</strong>
+          <p>Check the list of topics/conversations you see</p>
+        </li>
+        <li>
+          <strong>Compare with Workspace A topics</strong>
+          <div class="success-box" style="margin-top: 0.5rem;">
+            <strong>✅ CORRECT:</strong> The topics in Workspace B should be <strong>DIFFERENT</strong> from the topics you saw in Workspace A. If you see the same topics, that's a problem!
+          </div>
+          <div class="error-box" style="margin-top: 0.5rem;">
+            <strong>❌ PROBLEM:</strong> If you see topics from Workspace A in Workspace B's list, that means isolation is NOT working. Report this as a FAIL.
+          </div>
+        </li>
+        <li>
+          <strong>If you don't see any topics in Workspace B:</strong>
+          <p>Send a test message to create a topic. Make sure it's different from Workspace A topics.</p>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="section">
+      <h2>Step 5: Test Isolation (403 Error) - THE MOST IMPORTANT TEST!</h2>
+      <p>This test verifies that workspaces are properly isolated and users can't access topics from other workspaces.</p>
+      
+      <div class="warning-box">
+        <strong>⚠️ IMPORTANT:</strong>
+        <p>You need to have topics/messages in BOTH workspaces to test this. If you don't have topics yet, create some first!</p>
+      </div>
+
+      <h3>How to Test Workspace Isolation:</h3>
+      
+      <div class="info-box" style="margin-bottom: 2rem;">
+        <strong>💡 Understanding How It Works:</strong>
+        <p style="margin-top: 0.5rem;">Think of it like this:</p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+          <li><strong>Workspace</strong> = A company/organization (like "Starbucks" or "Amazon")</li>
+          <li><strong>Topic</strong> = A conversation/chat thread (like "Support Ticket #123" or "General Discussion")</li>
+          <li><strong>Message</strong> = Individual messages inside a topic</li>
+        </ul>
+        <p style="margin-top: 0.5rem;"><strong>Important:</strong> Each topic "belongs" to one workspace. When you're logged into Workspace A, you should ONLY see topics that belong to Workspace A. You should NOT see topics from Workspace B.</p>
+      </div>
+
+      <div class="info-box">
+        <strong>📝 Step-by-Step Instructions:</strong>
+        <p style="margin-top: 0.5rem;">Follow these steps. You will send test messages and check if topics from one workspace appear in the other workspace.</p>
+        <ol style="margin-left: 1.5rem; margin-top: 1rem;">
+          <li style="margin-bottom: 1rem;">
+            <strong>Step 1: Create test topics in Workspace A (with unique names you can remember):</strong>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+              <li>Click "Workspace A" box (it turns blue/purple)</li>
+              <li>Click "🚀 Open Chat with Selected Workspace"</li>
+              <li>In the chat window, send these messages (one at a time):
+                <div class="warning-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>Send these messages in Workspace A:</strong>
+                  <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><code>"WORKSPACE A - TEST TOPIC 1"</code></li>
+                    <li><code>"WORKSPACE A - TEST TOPIC 2"</code></li>
+                    <li><code>"WORKSPACE A - TEST TOPIC 3"</code></li>
+                  </ol>
+                </div>
+              </li>
+              <li><strong>Look at the topic list</strong> - you should see topics with names like "WORKSPACE A - TEST TOPIC 1"</li>
+              <li><strong>Write down on paper:</strong> "Workspace A topics: [list the topic names you see]"</li>
+              <li>Close the chat window (click X)</li>
+            </ul>
+          </li>
+          
+          <li style="margin-bottom: 1rem;">
+            <strong>Step 2: Create test topics in Workspace B (with DIFFERENT names):</strong>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+              <li>Click "Workspace B" box (it turns blue/purple)</li>
+              <li>Click "🚀 Open Chat with Selected Workspace"</li>
+              <li><strong>CRITICAL CHECK #1:</strong> Look at the topic list. Do you see ANY topics that say "WORKSPACE A" in the name?
+                <div class="error-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>❌ IF YES:</strong> You see "WORKSPACE A - TEST TOPIC 1" or similar = FAIL! Report this immediately. Isolation is broken.
+                </div>
+                <div class="success-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>✅ IF NO:</strong> You don't see any "WORKSPACE A" topics = GOOD! Isolation is working so far.
+                </div>
+              </li>
+              <li>Now send these messages in Workspace B:
+                <div class="warning-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>Send these messages in Workspace B:</strong>
+                  <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><code>"WORKSPACE B - TEST TOPIC 1"</code></li>
+                    <li><code>"WORKSPACE B - TEST TOPIC 2"</code></li>
+                    <li><code>"WORKSPACE B - TEST TOPIC 3"</code></li>
+                  </ol>
+                </div>
+              </li>
+              <li><strong>Look at the topic list</strong> - you should see topics with names like "WORKSPACE B - TEST TOPIC 1"</li>
+              <li><strong>Write down on paper:</strong> "Workspace B topics: [list the topic names you see]"</li>
+              <li>Close the chat window</li>
+            </ul>
+          </li>
+          
+          <li style="margin-bottom: 1rem;">
+            <strong>Step 3: Test Isolation - Can you see Workspace A topics from Workspace B?</strong>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+              <li>Make sure you're in Workspace B (box should be blue/purple)</li>
+              <li>Open the chat window</li>
+              <li><strong>Look at the topic list carefully</strong></li>
+              <li><strong>CRITICAL CHECK #2:</strong> Can you see ANY topic that says "WORKSPACE A" in the name?
+                <div class="success-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>✅ CORRECT (PASS):</strong> You should NOT see any "WORKSPACE A" topics. You should ONLY see "WORKSPACE B" topics. This means isolation is working!
+                </div>
+                <div class="error-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>❌ WRONG (FAIL):</strong> If you can see "WORKSPACE A - TEST TOPIC 1" or similar, that's a FAIL. Report this immediately.
+                </div>
+              </li>
+            </ul>
+          </li>
+          
+          <li style="margin-bottom: 1rem;">
+            <strong>Step 4: Test Isolation - Can you see Workspace B topics from Workspace A?</strong>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+              <li>Close Workspace B chat</li>
+              <li>Click "Workspace A" box</li>
+              <li>Open the chat window</li>
+              <li><strong>Look at the topic list carefully</strong></li>
+              <li><strong>CRITICAL CHECK #3:</strong> Can you see ANY topic that says "WORKSPACE B" in the name?
+                <div class="success-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>✅ CORRECT (PASS):</strong> You should NOT see any "WORKSPACE B" topics. You should ONLY see "WORKSPACE A" topics.
+                </div>
+                <div class="error-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>❌ WRONG (FAIL):</strong> If you can see "WORKSPACE B - TEST TOPIC 1" or similar, that's a FAIL. Report this immediately.
+                </div>
+              </li>
+            </ul>
+          </li>
+          
+          <li style="margin-bottom: 1rem;">
+            <strong>Step 5: Test Message Content Isolation (BONUS TEST):</strong>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+              <li>In Workspace A, click on a topic (like "WORKSPACE A - TEST TOPIC 1")</li>
+              <li>Read the messages - they should say "WORKSPACE A - TEST TOPIC 1"</li>
+              <li>Close Workspace A chat</li>
+              <li>Open Workspace B chat</li>
+              <li><strong>CRITICAL CHECK #4:</strong> Can you see messages that say "WORKSPACE A" anywhere?
+                <div class="success-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>✅ CORRECT:</strong> You should NOT see any messages with "WORKSPACE A" text. You should only see "WORKSPACE B" messages.
+                </div>
+                <div class="error-box" style="margin-top: 0.5rem; margin-left: 0;">
+                  <strong>❌ WRONG:</strong> If you can read messages that say "WORKSPACE A", that's a FAIL.
+                </div>
+              </li>
+            </ul>
+          </li>
+          
+        </ol>
+      </div>
+
+      <div class="success-box" style="margin-top: 2rem;">
+        <strong>✅ PASS - Report these results:</strong>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+          <li>✅ In Workspace B, you do NOT see any topics with "WORKSPACE A" in the name</li>
+          <li>✅ In Workspace A, you do NOT see any topics with "WORKSPACE B" in the name</li>
+          <li>✅ Each workspace shows ONLY its own topics (A shows only A topics, B shows only B topics)</li>
+          <li>✅ You cannot read messages from the other workspace</li>
+        </ul>
+        <p style="margin-top: 1rem; font-weight: 600;">If all checks above are ✅, write: <strong>"PASS - Workspace isolation is working correctly"</strong></p>
+      </div>
+
+      <div class="error-box" style="margin-top: 1.5rem;">
+        <strong>❌ FAIL - Report these problems immediately:</strong>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+          <li>❌ In Workspace B, you CAN see topics with "WORKSPACE A" in the name</li>
+          <li>❌ In Workspace A, you CAN see topics with "WORKSPACE B" in the name</li>
+          <li>❌ You can open and read messages from topics in the wrong workspace</li>
+          <li>❌ Topics from one workspace appear in the other workspace's list</li>
+        </ul>
+        <p style="margin-top: 1rem; font-weight: 600;">If ANY check above is ❌, write: <strong>"FAIL - Workspace isolation is broken"</strong> and describe what you saw</p>
+      </div>
+
+      <div class="info-box" style="margin-top: 2rem; background: #e0f2fe; border-left: 4px solid var(--primary);">
+        <strong>💡 REMEMBER - You Don't Need to See Topic IDs!</strong>
+        <p style="margin-top: 0.5rem;">You don't need developer tools, database access, or any technical knowledge. Just:</p>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+          <li>✅ Look at the <strong>topic names</strong> you can see in the chat window</li>
+          <li>✅ Use simple test messages like "WORKSPACE A - TEST TOPIC 1" so you can easily identify them</li>
+          <li>✅ Check if topics from one workspace appear in the other workspace's list</li>
+          <li>✅ That's it! No technical knowledge needed!</li>
+        </ul>
+      </div>
+
+      <div class="warning-box" style="margin-top: 1.5rem;">
+        <strong>⚠️ Remember:</strong>
+        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+          <li>Each <strong>topic</strong> belongs to ONE workspace only</li>
+          <li>Each <strong>message</strong> belongs to ONE topic only</li>
+          <li>When you're in Workspace A, you should ONLY see topics and messages from Workspace A</li>
+          <li>When you're in Workspace B, you should ONLY see topics and messages from Workspace B</li>
+          <li>If you can see or access topics/messages from the wrong workspace, that's a FAIL ❌</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="section">
+      <h2>🔧 Troubleshooting</h2>
+      
+      <h3>"No workspaces configured" error?</h3>
+      <div class="error-box">
+        <strong>Solution:</strong>
+        <p>Tell the developer - the server needs to be restarted with proper .env file</p>
+      </div>
+
+      <h3>Can't see the two boxes?</h3>
+      <div class="warning-box">
+        <strong>Solutions:</strong>
+        <ul>
+          <li>Make sure you're logged in (see Step 2)</li>
+          <li>Check the top of the page for a status message</li>
+          <li>Refresh the page</li>
+        </ul>
+      </div>
+
+      <h3>Chat doesn't open?</h3>
+      <div class="warning-box">
+        <strong>Solutions:</strong>
+        <ul>
+          <li>Check the browser console (press <code>F12</code>)</li>
+          <li>Make sure you selected a workspace first (box should be purple/blue)</li>
+          <li>Wait a few seconds and try again</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- What to Report -->
+    <div class="section">
+      <h2>📋 What to Report</h2>
+      
+      <div class="success-box">
+        <strong>✅ PASS - Report these if everything works:</strong>
+        <ul>
+          <li>Can see both Workspace A and B boxes</li>
+          <li>Can open chat for each workspace</li>
+          <li>Each workspace shows different content</li>
+          <li>Cannot access other workspace (403 error)</li>
+        </ul>
+      </div>
+
+      <div class="error-box">
+        <strong>❌ FAIL - Report these if something doesn't work:</strong>
+        <ul>
+          <li>Cannot see workspace boxes</li>
+          <li>Chat doesn't open</li>
+          <li>Can access topics from wrong workspace (no 403 error)</li>
+          <li>Any error messages</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="section">
+      <h2>🚀 Quick Start</h2>
+      <p>Ready to start testing? Click the button below to go directly to the QA test page:</p>
+      <a href="/qa-test.html" class="cta-button">Start QA Testing →</a>
+    </div>
+  </div>
+
+  <script>
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

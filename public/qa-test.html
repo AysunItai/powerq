@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Testing - Workspace Isolation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 { color: #333; margin-bottom: 0.5rem; font-size: 2rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; font-size: 1rem; }
+    .login-prompt {
+      text-align: center;
+      padding: 2.5rem;
+      background: #fff3cd;
+      border: 3px solid #ffc107;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+    .login-prompt h3 { color: #856404; margin-bottom: 1rem; }
+    .login-prompt a {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    .workspace-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .workspace-btn {
+      padding: 2rem;
+      border: 3px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .workspace-btn:hover {
+      border-color: #667eea;
+      background: #f0f0ff;
+      transform: translateY(-2px);
+    }
+    .workspace-btn.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+    .workspace-btn h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .workspace-btn p { font-size: 0.9rem; opacity: 0.8; }
+    .current-workspace {
+      background: #e7f3ff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #004085;
+      display: none;
+    }
+    .test-btn {
+      width: 100%;
+      padding: 1.2rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+    }
+    .test-btn:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+    .test-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .instructions {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border-left: 4px solid #667eea;
+    }
+    .instructions h3 {
+      color: #333;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    .instructions ol {
+      margin-left: 1.5rem;
+      color: #666;
+      line-height: 1.8;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1>🧪 QA Testing</h1>
+    <p class="subtitle">Test Workspace Isolation Feature</p>
+    
+    <div id="pageStatus" style="padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center; font-weight: 600; display: none;"></div>
+    
+    <div class="instructions">
+      <h3>📋 Testing Instructions:</h3>
+      <ol>
+        <li>Login if you haven't already</li>
+        <li>Select a workspace (A or B)</li>
+        <li>Click "Open Chat" button</li>
+        <li>Verify you only see topics/messages from the selected workspace</li>
+        <li>Try switching to the other workspace and verify isolation</li>
+      </ol>
+    </div>
+    
+    <div id="loginPrompt" class="login-prompt" style="display: none;">
+      <h3 style="margin-bottom: 1rem; font-size: 1.3rem;">⚠️ YOU MUST LOGIN FIRST!</h3>
+      <p style="font-size: 1.1rem; margin-bottom: 1rem;">Click the button below to login, then come back here.</p>
+      <a href="/login.html">👉 CLICK HERE TO LOGIN 👈</a>
+      <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">Login with: <strong>john@example.com</strong> / <strong>password123</strong></p>
+    </div>
+    
+    <div id="loadingWorkspaces" style="display: none; text-align: center; padding: 2rem; color: #666;">
+      <p>Loading workspaces...</p>
+    </div>
+    
+    <div id="workspaceSelector" class="workspace-selector" style="display: none;"></div>
+    
+    <div id="currentWorkspace" class="current-workspace"></div>
+    
+    <button id="testBtn" class="test-btn" onclick="testWorkspace()" style="display: none;">
+      🚀 Open Chat with Selected Workspace
+    </button>
+    
+    <div id="status"></div>
+  </div>
+
+  <script>
+    let availableWorkspaces = [];
+    let selectedWorkspace = null;
+    let currentUser = null;
+    let sdkLoaded = false;
+    
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/me', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          currentUser = data.user;
+          document.getElementById('loginPrompt').style.display = 'none';
+          document.getElementById('pageStatus').style.display = 'block';
+          document.getElementById('pageStatus').style.background = '#d4edda';
+          document.getElementById('pageStatus').style.color = '#155724';
+          document.getElementById('pageStatus').textContent = '✅ You are logged in! Loading workspaces...';
+          document.getElementById('loadingWorkspaces').style.display = 'block';
+          await loadWorkspaces();
+          document.getElementById('loadingWorkspaces').style.display = 'none';
+          document.getElementById('pageStatus').textContent = '✅ Ready to test! Select a workspace below.';
+        } else {
+          document.getElementById('pageStatus').style.display = 'block';
+          document.getElementById('pageStatus').style.background = '#f8d7da';
+          document.getElementById('pageStatus').style.color = '#721c24';
+          document.getElementById('pageStatus').textContent = '❌ NOT LOGGED IN - You must login first!';
+          document.getElementById('loginPrompt').style.display = 'block';
+          document.getElementById('workspaceSelector').style.display = 'none';
+          document.getElementById('testBtn').style.display = 'none';
+          document.getElementById('loadingWorkspaces').style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        document.getElementById('loginPrompt').style.display = 'block';
+        document.getElementById('workspaceSelector').style.display = 'none';
+        document.getElementById('testBtn').style.display = 'none';
+      }
+    }
+    
+    async function loadWorkspaces() {
+      try {
+        const response = await fetch('/api/qa/workspaces');
+        if (!response.ok) throw new Error('Failed to load workspaces');
+        const data = await response.json();
+        availableWorkspaces = data.workspaces;
+        const selector = document.getElementById('workspaceSelector');
+        selector.innerHTML = '';
+        if (availableWorkspaces.length === 0) {
+          showStatus('❌ ERROR: No workspaces configured. Check server logs.', 'error');
+          return;
+        }
+        document.getElementById('workspaceSelector').style.display = 'grid';
+        document.getElementById('testBtn').style.display = 'block';
+        availableWorkspaces.forEach(ws => {
+          const btn = document.createElement('div');
+          btn.className = 'workspace-btn';
+          btn.onclick = () => selectWorkspace(ws.id);
+          btn.innerHTML = `<h2>Workspace ${ws.id}</h2><p>ID: ${ws.workspace_id}</p>`;
+          selector.appendChild(btn);
+        });
+        if (availableWorkspaces.length > 0) {
+          selectWorkspace(availableWorkspaces[0].id);
+        }
+      } catch (err) {
+        showStatus('❌ ERROR: ' + err.message, 'error');
+        console.error('Error loading workspaces:', err);
+      }
+    }
+    
+    function selectWorkspace(workspaceId) {
+      selectedWorkspace = workspaceId;
+      document.querySelectorAll('.workspace-btn').forEach((btn, index) => {
+        if (availableWorkspaces[index].id === workspaceId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      const ws = availableWorkspaces.find(w => w.id === workspaceId);
+      if (ws) {
+        document.getElementById('currentWorkspace').style.display = 'block';
+        document.getElementById('currentWorkspace').innerHTML = `<strong>✅ Selected:</strong> Workspace ${ws.id} (ID: ${ws.workspace_id})`;
+      }
+    }
+    
+    async function testWorkspace() {
+      if (!selectedWorkspace || !currentUser) {
+        showStatus('Please select a workspace and ensure you are logged in', 'error');
+        return;
+      }
+      const btn = document.getElementById('testBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Opening chat...';
+      try {
+        const response = await fetch('/api/qa/chat/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ workspace: selectedWorkspace })
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to get JWT token');
+        }
+        const data = await response.json();
+        if (typeof Quadrillian === 'undefined') {
+          await loadSDK();
+        }
+        const baseUrl = 'https://eng.quadrillian.com';
+        if (Quadrillian.setBaseUrl) {
+          Quadrillian.setBaseUrl(baseUrl);
+        }
+        Quadrillian.createChatWindow({
+          workspace_id: String(data.workspace_id),
+          topic_external_key: data.topic_external_key,
+          jwt_token: data.jwt,
+          position: "bottom-right",
+          width: 400,
+          height: 600
+        });
+        showStatus(`✅ Chat opened for Workspace ${data.workspace}! You should only see topics/messages from Workspace ${data.workspace} (ID: ${data.workspace_id}). Try accessing topics from the other workspace - you should get 403 Forbidden.`, 'success');
+        btn.textContent = '🚀 Open Chat with Selected Workspace';
+        btn.disabled = false;
+      } catch (err) {
+        showStatus(`❌ Error: ${err.message}`, 'error');
+        console.error('Test error:', err);
+        btn.textContent = '🚀 Open Chat with Selected Workspace';
+        btn.disabled = false;
+      }
+    }
+    
+    async function loadSDK() {
+      return new Promise((resolve, reject) => {
+        if (typeof Quadrillian !== 'undefined') {
+          resolve();
+          return;
+        }
+        if (sdkLoaded) {
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            if (typeof Quadrillian !== 'undefined') {
+              clearInterval(checkInterval);
+              resolve();
+            } else if (attempts++ > 50) {
+              clearInterval(checkInterval);
+              reject(new Error('SDK failed to load'));
+            }
+          }, 100);
+          return;
+        }
+        sdkLoaded = true;
+        const script = document.createElement('script');
+        script.src = 'https://eng.quadrillian.com/js/chat/sdk.js';
+        script.async = true;
+        script.onload = () => {
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            if (typeof Quadrillian !== 'undefined') {
+              clearInterval(checkInterval);
+              resolve();
+            } else if (attempts++ > 50) {
+              clearInterval(checkInterval);
+              reject(new Error('SDK failed to load'));
+            }
+          }, 100);
+        };
+        script.onerror = () => {
+          sdkLoaded = false;
+          reject(new Error('Failed to load SDK'));
+        };
+        document.head.appendChild(script);
+      });
+    }
+    
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.className = `status ${type}`;
+      status.textContent = message;
+      status.style.display = 'block';
+      if (type === 'success') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 8000);
+      }
+    }
+    
+    checkAuth();
+  </script>
+</body>
+</html>
